@@ -26,10 +26,10 @@ impl NavigationCompass {
     }
   }
 
-  pub fn try_solve(&self, available_linages: Vec<Linkage>) -> Option<Vec<Action>> {
+  pub fn try_solve(&self, available_linkages: Vec<Linkage>) -> Option<Vec<Action>> {
     let mut combination_num = 1;
     while combination_num < 100 {
-      let result = available_linages
+      let result = available_linkages
         .iter()
         .cloned()
         .combinations_with_replacement(combination_num)
@@ -53,8 +53,8 @@ impl NavigationCompass {
   fn do_actions(&self, actions: &Vec<Action>) -> NavigationCompass {
     let mut result = self.clone();
 
-    for aciton in actions {
-      match aciton {
+    for action in actions {
+      match action {
         Action::Rotate(Linkage {
           inner,
           middle,
