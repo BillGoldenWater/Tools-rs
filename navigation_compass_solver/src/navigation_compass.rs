@@ -27,8 +27,7 @@ impl NavigationCompass {
   }
 
   pub fn try_solve(&self, available_linkages: Vec<Linkage>) -> Option<Vec<Action>> {
-    let mut combination_num = 1;
-    while combination_num < 100 {
+    for combination_num in 1..=100 {
       let result = available_linkages
         .iter()
         .cloned()
@@ -39,8 +38,6 @@ impl NavigationCompass {
       if let Some(result) = result {
         return Some(result);
       }
-
-      combination_num += 1;
     }
 
     None
