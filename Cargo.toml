@@ -1,2 +1,2 @@
 [workspace]
-members = []
+members = [ "navigation_compass_solver" ]
