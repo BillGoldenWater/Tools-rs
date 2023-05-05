@@ -1,13 +1,8 @@
-mod action;
-mod linkage;
-mod navigation_compass;
-mod ring;
-
 use itertools::Itertools;
-use linkage::Linkage;
-use ring::Ring;
 
-use crate::navigation_compass::NavigationCompass;
+use navigation_compass_solver::linkage::Linkage;
+use navigation_compass_solver::navigation_compass::NavigationCompass;
+use navigation_compass_solver::ring::Ring;
 
 #[derive(Debug, argh::FromArgs)]
 /// A tool for solve Navigation Compass puzzle in Honkai: Star Rail
