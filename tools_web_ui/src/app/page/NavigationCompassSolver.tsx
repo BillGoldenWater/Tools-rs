@@ -176,7 +176,7 @@ function LinkageItemDot(props: { value: boolean; flip?: () => void }) {
       fallback={
         <div
           class={
-            "h-4 w-4 rounded-xl border-2 border-solid border-gray-500 bg-gray-800 transition-colors hover:bg-gray-800"
+            "h-4 w-4 rounded-xl border-2 border-solid border-gray-300 bg-gray-200 transition-colors dark:border-gray-500 dark:bg-gray-800"
           }
           onclick={props.flip}
         />
