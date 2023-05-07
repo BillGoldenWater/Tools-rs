@@ -85,20 +85,20 @@ export function NavigationCompassSolver() {
           <div class={"flex gap-2"}>
             <span>内:</span>
             <CurrentValueSelector value={inner()} setter={setInner} />
-            <DirectionSelector value={innerD()} setter={setInnerD} />
-            <AmountSelector value={innerN()} setter={setInnerN} />
+            方向: <DirectionSelector value={innerD()} setter={setInnerD} />
+            格数: <AmountSelector value={innerN()} setter={setInnerN} />
           </div>
           <div class={"flex gap-2"}>
             <span>中:</span>
             <CurrentValueSelector value={middle()} setter={setMiddle} />
-            <DirectionSelector value={middleD()} setter={setMiddleD} />
-            <AmountSelector value={middleN()} setter={setMiddleN} />
+            方向: <DirectionSelector value={middleD()} setter={setMiddleD} />
+            格数: <AmountSelector value={middleN()} setter={setMiddleN} />
           </div>
           <div class={"flex gap-2"}>
             <span>外:</span>
             <CurrentValueSelector value={outer()} setter={setOuter} />
-            <DirectionSelector value={middleD()} setter={setOuterD} />
-            <AmountSelector value={outerN()} setter={setOuterN} />
+            方向: <DirectionSelector value={middleD()} setter={setOuterD} />
+            格数: <AmountSelector value={outerN()} setter={setOuterN} />
           </div>
         </div>
       </Panel>
@@ -116,10 +116,22 @@ export function NavigationCompassSolver() {
   );
 }
 
+function LinkageSelector(props: { values: Signal<number>[] }) {
+  return (
+    <Panel class={"flex flex-col gap-4"}>
+      <div class={"flex justify-center"}>联动信息 (游戏内屏幕下方)</div>
+      <For each={props.values}>
+        {([val, set]) => <LinkageItem value={val()} setter={set} />}
+      </For>
+    </Panel>
+  );
+}
+
 function ResultDisplayer(props: { result: null | string | number[] }) {
   return (
     <Show when={props.result != null} fallback={<></>}>
       <Panel class={"flex flex-col gap-4"}>
+        <div class={"flex justify-center"}>结果</div>
         <Show
           when={typeof props.result !== "string"}
           fallback={<span>{props.result}</span>}
@@ -130,16 +142,6 @@ function ResultDisplayer(props: { result: null | string | number[] }) {
         </Show>
       </Panel>
     </Show>
-  );
-}
-
-function LinkageSelector(props: { values: Signal<number>[] }) {
-  return (
-    <Panel class={"flex flex-col gap-4"}>
-      <For each={props.values}>
-        {([val, set]) => <LinkageItem value={val()} setter={set} />}
-      </For>
-    </Panel>
   );
 }
 
