@@ -17,8 +17,9 @@ export function RingIndicator(props: RingIndicatorProps) {
         animate={{ rotate: rotate() }}
         transition={{
           easing: spring({
-            damping: 10,
+            damping: 15,
             mass: 1,
+            stiffness: 150,
           }),
         }}
         class={"group absolute left-24 top-24 h-0 w-0 transform-gpu"}
