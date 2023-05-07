@@ -41,6 +41,9 @@ async function main() {
   execCommand("mv docs.old/CNAME docs/CNAME");
 
   execCommand("rm -rf docs.old");
+
+  highlightLog("add new files to git");
+  execCommand("git add docs")
 }
 
 await main();
