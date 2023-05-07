@@ -12,3 +12,9 @@ export type PageId = keyof typeof pages;
 export function gen_path(page: PageId): string {
   return `?page=${page}`;
 }
+
+export function jump_to(page: PageId): () => void {
+  return () => {
+    window.location.href = gen_path(page);
+  };
+}
