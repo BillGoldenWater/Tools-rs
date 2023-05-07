@@ -22,14 +22,14 @@ export function RingIndicator(props: RingIndicatorProps) {
           }),
         }}
         class={"group absolute left-24 top-24 h-0 w-0 transform-gpu"}
-        classList={{ ringIndicatorActive: props.active }}
+        classList={{ ringIndicatorNonActive: !props.active }}
       >
         <div
           style={{
             "--tw-translate-x": `${xOffset()}rem`,
           }}
           class={
-            "absolute h-2 w-8 -translate-y-1 transform-gpu rounded bg-cyan-700 group-[.ringIndicatorActive]:bg-cyan-500 dark:bg-cyan-900 dark:group-[.ringIndicatorActive]:bg-cyan-300"
+            "absolute h-2 w-8 -translate-y-1 transform-gpu rounded bg-cyan-400 group-[.ringIndicatorNonActive]:saturate-50 dark:bg-cyan-300 dark:group-[.ringIndicatorNonActive]:brightness-75"
           }
         />
       </Motion.div>
