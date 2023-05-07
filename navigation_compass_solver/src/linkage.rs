@@ -13,6 +13,10 @@ impl Linkage {
       outer: (mask & 0b001) > 0,
     }
   }
+  
+  pub fn to_u8(&self) -> u8 {
+    (self.inner as u8) << 2 | (self.middle as u8) << 1 | self.outer as u8
+  }
 }
 
 impl std::fmt::Debug for Linkage {
@@ -20,7 +24,7 @@ impl std::fmt::Debug for Linkage {
     write!(
       f,
       "{:03b}",
-      (self.inner as u8) << 2 | (self.middle as u8) << 1 | self.outer as u8
+      self.to_u8()
     )
   }
 }

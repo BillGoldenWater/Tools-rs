@@ -2,15 +2,10 @@
 name = "navigation_compass_solver"
 version = "0.1.0"
 edition = "2021"
+authors = ["Golden_Water"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 argh = "0.1.10"
 itertools = "0.10.5"
-
-
-[profile.release]
-opt-level = "z"
-lto = "on"
-strip = true

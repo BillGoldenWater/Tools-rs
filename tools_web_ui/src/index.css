@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  @apply bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-gray-200;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  @apply rounded-xl border-2 border-solid border-gray-300 bg-gray-200 outline-none dark:border-gray-600 dark:bg-gray-900;
+}
+
+select {
+  @apply rounded-lg border-2 border-solid border-gray-300 bg-gray-200 outline-none dark:border-gray-600 dark:bg-gray-900;
+}
+
+button {
+  @apply rounded-lg border-2 border-solid border-gray-300 bg-gray-200 pb-1 pl-2 pr-2 pt-1 outline-none transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:hover:bg-gray-800;
+}
