@@ -73,7 +73,7 @@ export function NavigationCompassSolver() {
         />
       </Panel>
       <Panel>
-        <div class={"flex flex-col"}>
+        <div class={"flex flex-col gap-2 break-keep"}>
           <datalist id="navigationCompassRingValues">
             <option value="0" />
             <option value="1" />
@@ -82,24 +82,33 @@ export function NavigationCompassSolver() {
             <option value="4" />
             <option value="5" />
           </datalist>
-          <div class={"flex gap-2"}>
-            <span>内:</span>
-            <CurrentValueSelector value={inner()} setter={setInner} />
-            方向: <DirectionSelector value={innerD()} setter={setInnerD} />
-            格数: <AmountSelector value={innerN()} setter={setInnerN} />
-          </div>
-          <div class={"flex gap-2"}>
-            <span>中:</span>
-            <CurrentValueSelector value={middle()} setter={setMiddle} />
-            方向: <DirectionSelector value={middleD()} setter={setMiddleD} />
-            格数: <AmountSelector value={middleN()} setter={setMiddleN} />
-          </div>
-          <div class={"flex gap-2"}>
-            <span>外:</span>
-            <CurrentValueSelector value={outer()} setter={setOuter} />
-            方向: <DirectionSelector value={middleD()} setter={setOuterD} />
-            格数: <AmountSelector value={outerN()} setter={setOuterN} />
-          </div>
+          <RingInfoInput
+            name={"内圈"}
+            current={inner()}
+            setCurrent={setInner}
+            direction={innerD()}
+            setDirection={setInnerD}
+            amount={innerN()}
+            setAmount={setInnerN}
+          />
+          <RingInfoInput
+            name={"中圈"}
+            current={middle()}
+            setCurrent={setMiddle}
+            direction={middleD()}
+            setDirection={setMiddleD}
+            amount={middleN()}
+            setAmount={setMiddleN}
+          />
+          <RingInfoInput
+            name={"外圈"}
+            current={outer()}
+            setCurrent={setOuter}
+            direction={outerD()}
+            setDirection={setOuterD}
+            amount={outerN()}
+            setAmount={setOuterN}
+          />
         </div>
       </Panel>
       <LinkageSelector values={linkages} />
@@ -112,6 +121,36 @@ export function NavigationCompassSolver() {
         </button>
       </Panel>
       <ResultDisplayer result={result()} />
+    </div>
+  );
+}
+
+function RingInfoInput(props: {
+  name: string;
+  current: number;
+  setCurrent: Setter<number>;
+  direction: Direction;
+  setDirection: Setter<Direction>;
+  amount: Amount;
+  setAmount: Setter<Amount>;
+}) {
+  return (
+    <div class={"flex flex-wrap gap-2"}>
+      <div class={"flex gap-2"}>
+        {props.name}:
+        <CurrentValueSelector value={props.current} setter={props.setCurrent} />
+      </div>
+      <div class={"flex gap-2"}>
+        方向:
+        <DirectionSelector
+          value={props.direction}
+          setter={props.setDirection}
+        />
+      </div>
+      <div class={"flex gap-2"}>
+        格数:
+        <AmountSelector value={props.amount} setter={props.setAmount} />
+      </div>
     </div>
   );
 }
