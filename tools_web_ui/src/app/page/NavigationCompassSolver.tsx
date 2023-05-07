@@ -152,7 +152,9 @@ function LinkageItem(props: { value: number; setter?: Setter<number> }) {
   }
 
   return (
-    <div class={"flex justify-around"}>
+    <div
+      class={"flex justify-around rounded-lg bg-gray-200 p-2 dark:bg-gray-900"}
+    >
       <LinkageItemDot
         value={(props.value & 0b100) > 0}
         flip={props.setter && flip.bind(null, 0)}
