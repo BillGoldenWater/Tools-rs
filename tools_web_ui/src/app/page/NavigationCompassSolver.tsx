@@ -111,7 +111,7 @@ export function NavigationCompassSolver() {
           />
         </div>
       </Panel>
-      <LinkageSelector values={linkages} />
+      <LinkageSelector values={linkages} result={result()} />
       <Panel class={"flex gap-4"}>
         <button class={"w-full"} onclick={() => solve()}>
           推演
@@ -120,7 +120,6 @@ export function NavigationCompassSolver() {
           重置
         </button>
       </Panel>
-      <ResultDisplayer result={result()} />
     </div>
   );
 }
@@ -155,32 +154,50 @@ function RingInfoInput(props: {
   );
 }
 
-function LinkageSelector(props: { values: Signal<number>[] }) {
+function LinkageSelector(props: {
+  values: Signal<number>[];
+  result: null | string | number[];
+}) {
+  function resultCounter(value: number, result: number[]) {
+    let count = 0;
+    for (const val of result) {
+      if (value == val) count += 1;
+    }
+    return <>{count}</>;
+  }
+
   return (
     <Panel class={"flex flex-col gap-4"}>
-      <div class={"flex justify-center"}>联动信息 (游戏内屏幕下方)</div>
+      <div class={"flex justify-center"}>
+        联动信息 (游戏内屏幕下方){" "}
+        <Show when={props.result != null && typeof props.result !== "string"}>
+          x 旋转次数
+        </Show>
+      </div>
+      <Show when={typeof props.result === "string"}>
+        <div class={"flex justify-center text-red-800 dark:text-red-300"}>
+          {props.result}
+        </div>
+      </Show>
       <For each={props.values}>
-        {([val, set]) => <LinkageItem value={val()} setter={set} />}
+        {([val, set]) => (
+          <div class={"flex gap-2"}>
+            <LinkageItem value={val()} setter={set} />
+            <Show
+              when={props.result != null && typeof props.result !== "string"}
+            >
+              <div
+                class={
+                  "flex items-center rounded-lg bg-gray-200 pl-4 pr-4 font-mono dark:bg-gray-900"
+                }
+              >
+                {resultCounter(val(), props.result as number[])}
+              </div>
+            </Show>
+          </div>
+        )}
       </For>
     </Panel>
-  );
-}
-
-function ResultDisplayer(props: { result: null | string | number[] }) {
-  return (
-    <Show when={props.result != null} fallback={<></>}>
-      <Panel class={"flex flex-col gap-4"}>
-        <div class={"flex justify-center"}>结果</div>
-        <Show
-          when={typeof props.result !== "string"}
-          fallback={<span>{props.result}</span>}
-        >
-          <For each={props.result as number[]}>
-            {(val) => <LinkageItem value={val} />}
-          </For>
-        </Show>
-      </Panel>
-    </Show>
   );
 }
 
@@ -194,7 +211,9 @@ function LinkageItem(props: { value: number; setter?: Setter<number> }) {
 
   return (
     <div
-      class={"flex justify-around rounded-lg bg-gray-200 p-2 dark:bg-gray-900"}
+      class={
+        "flex flex-grow justify-around rounded-lg bg-gray-200 p-2 dark:bg-gray-900"
+      }
     >
       <LinkageItemDot
         value={(props.value & 0b100) > 0}
