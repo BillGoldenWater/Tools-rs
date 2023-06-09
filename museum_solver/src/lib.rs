@@ -188,10 +188,16 @@ pub fn solve(members: Vec<MemberInfo>, zones: Vec<Zone>) -> Option<SolveResult> 
     return None;
   }
 
-  Some(solve_inner(SolveState { members, zones }))
+  let mut cache = HashMap::new();
+
+  Some(solve_inner(SolveState { members, zones }, &mut cache))
 }
 
-fn solve_inner(state: SolveState) -> SolveResult {
+fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) -> SolveResult {
+  if let Some(solve_result) = cache.get(&state) {
+    return solve_result.clone();
+  }
+
   let combinations = state.member_combinations();
 
   let mut min_result = (
@@ -204,7 +210,7 @@ fn solve_inner(state: SolveState) -> SolveResult {
     let mut zones = HashMap::new();
 
     if state.can_next() {
-      let next = solve_inner(state.next(&members));
+      let next = solve_inner(state.next(&members), cache);
 
       result += next.0;
       zones = next.1;
@@ -215,6 +221,8 @@ fn solve_inner(state: SolveState) -> SolveResult {
       min_result = (result, zones)
     }
   }
+
+  cache.insert(state, min_result.clone());
 
   min_result
 }
