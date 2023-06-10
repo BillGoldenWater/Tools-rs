@@ -242,9 +242,9 @@ fn loop_once(state: &mut State, refresh: &mut bool) -> Result<(), bool> {
     "updz" => {
       check_arg(&args, 3)?;
 
-      match args[0].as_str() {
-        "lvl" => state.update_zone_level(&args[1], parse_attr(&args[2])?),
-        "req" => state.update_zone_require(&args[1], parse_attr(&args[2])?),
+      match args[1].as_str() {
+        "lvl" => state.update_zone_level(&args[0], parse_attr(&args[2])?),
+        "req" => state.update_zone_require(&args[0], parse_attr(&args[2])?),
         _ => return unknown_usage(),
       }?;
     }
@@ -363,9 +363,9 @@ fn print_help() {
       例: addz 综合区-内 base 80/80/80 lvl 3/6/2 req 205/245/150
   delz <名字>
     移除区域
-  updz lvl <名字> <游览导引>/<科普物料>/<游客宣传>
+  updz <名字> lvl <游览导引>/<科普物料>/<游客宣传>
     更新区域等级
-  updz req <名字> <游览时长>/<科普价值>/<吸引人流>
+  updz <名字> req <游览时长>/<科普价值>/<吸引人流>
     更新区域需求
 
   load <路径>
