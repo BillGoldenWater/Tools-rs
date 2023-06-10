@@ -187,6 +187,8 @@ fn main() {
   let mut state = State::default();
   let mut refresh = true;
 
+  let _ = state.load(PathBuf::from("state.json"));
+
   loop {
     let result = loop_once(&mut state, &mut refresh);
     if let Err(break_loop) = result {
