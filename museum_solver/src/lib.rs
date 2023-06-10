@@ -1,9 +1,10 @@
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct MemberInfo {
   pub name: String,
   pub attr: Attribute,
@@ -24,7 +25,7 @@ impl Display for MemberInfo {
   }
 }
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Attribute {
   pub time: i64,
   pub value: i64,
@@ -49,6 +50,23 @@ impl Attribute {
   }
 }
 
+impl Add for Attribute {
+  type Output = Attribute;
+
+  fn add(mut self, rhs: Self) -> Self::Output {
+    self += rhs;
+    self
+  }
+}
+
+impl AddAssign for Attribute {
+  fn add_assign(&mut self, rhs: Self) {
+    self.time += rhs.time;
+    self.value += rhs.value;
+    self.popularity += rhs.popularity;
+  }
+}
+
 impl Sub for Attribute {
   type Output = Self;
 
@@ -66,7 +84,7 @@ impl SubAssign for Attribute {
   }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Zone {
   pub name: String,
   pub base: Attribute,
@@ -117,6 +135,16 @@ impl Zone {
     }
 
     CalcResult::new(require, overflow)
+  }
+
+  pub fn calc_detail(&self, member: &[MemberInfo]) -> Attribute {
+    let member_sum: Attribute = member
+      .iter()
+      .map(|it| &it.attr)
+      .cloned()
+      .fold(Attribute::new(0, 0, 0), |acc, it| acc + it);
+
+    member_sum + self.base.clone() + self.sub_level.clone().mul_by(10)
   }
 }
 
