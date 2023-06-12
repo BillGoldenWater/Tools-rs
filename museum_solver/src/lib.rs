@@ -148,7 +148,7 @@ impl Zone {
   }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CalcResult {
   pub require: u64,
   pub overflow: u64,
@@ -218,12 +218,22 @@ pub fn solve(members: Vec<MemberInfo>, zones: Vec<Zone>) -> Option<SolveResult> 
 
   let mut cache = HashMap::new();
 
-  Some(solve_inner(SolveState { members, zones }, &mut cache))
+  Some(solve_inner(
+    SolveState { members, zones },
+    CalcResult::new(0, 0),
+    &mut cache,
+  ))
 }
 
-fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) -> SolveResult {
-  if let Some(solve_result) = cache.get(&state) {
-    return solve_result.clone();
+fn solve_inner(
+  state: SolveState,
+  prev_total: CalcResult,
+  cache: &mut HashMap<SolveState, (SolveResult, CalcResult)>,
+) -> SolveResult {
+  if let Some((solve_result, result)) = cache.get(&state) {
+    if *result <= prev_total {
+      return solve_result.clone();
+    }
   }
 
   let combinations = state.member_combinations();
@@ -234,7 +244,7 @@ fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) 
   );
 
   for members in combinations {
-    let mut result = state.current_zone().calc(&members);
+    let mut result = state.current_zone().calc(&members) + prev_total;
     if result >= min_result.0 {
       continue;
     }
@@ -242,9 +252,9 @@ fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) 
     let mut zones = HashMap::with_capacity(1);
 
     if state.can_next() {
-      let next = solve_inner(state.next(&members), cache);
+      let next = solve_inner(state.next(&members), result, cache);
 
-      result += next.0;
+      result = next.0;
       zones = next.1;
     }
 
@@ -254,7 +264,7 @@ fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) 
     }
   }
 
-  cache.insert(state, min_result.clone());
+  cache.insert(state, (min_result.clone(), min_result.0));
 
   min_result
 }
