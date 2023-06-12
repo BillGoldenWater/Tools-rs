@@ -127,7 +127,7 @@ impl Zone {
     assert!(!member.is_empty() && member.len() <= 3);
 
     let mut req = self.require.clone()
-      - (self.base.clone() - self.sub_level.clone().mul_by(10))
+      - (self.base.clone() + self.sub_level.clone().mul_by(10))
         .mul_byf(self.base_scaler as f64 / 100_f64);
     let mut require: u64 = 0;
     let mut overflow: u64 = 0;
