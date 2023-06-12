@@ -130,7 +130,9 @@ impl State {
   ) {
     let name = name.into();
     self.del_zone(&name);
-    self.zones.push(Zone::new(name, base, sub_level, require))
+    self
+      .zones
+      .push(Zone::new(name, base, sub_level, require, 100))
   }
 
   pub fn del_zone(&mut self, name: impl Into<String>) {
@@ -158,6 +160,15 @@ impl State {
   ) -> Result<(), bool> {
     if let Some(zone) = self.zone_by_name_mut(name) {
       zone.require = require;
+      Ok(())
+    } else {
+      unknown_usage()
+    }
+  }
+
+  pub fn update_zone_scaler(&mut self, name: impl Into<String>, scaler: u64) -> Result<(), bool> {
+    if let Some(zone) = self.zone_by_name_mut(name) {
+      zone.base_scaler = scaler;
       Ok(())
     } else {
       unknown_usage()
@@ -245,6 +256,7 @@ fn loop_once(state: &mut State, refresh: &mut bool) -> Result<(), bool> {
       match args[1].as_str() {
         "lvl" => state.update_zone_level(&args[0], parse_attr(&args[2])?),
         "req" => state.update_zone_require(&args[0], parse_attr(&args[2])?),
+        "scaler" => state.update_zone_scaler(&args[0], parse_i64(&args[2])? as u64),
         _ => return unknown_usage(),
       }?;
     }
@@ -312,15 +324,18 @@ fn parse_attr(input: impl AsRef<str>) -> Result<Attribute, bool> {
   let attr = input
     .as_ref()
     .split('/')
-    .map(i64::from_str)
-    .collect::<Result<Vec<_>, _>>()
-    .map_err(|_| unknown_usage().unwrap_err())?;
+    .map(parse_i64)
+    .collect::<Result<Vec<_>, _>>()?;
 
   if attr.len() != 3 {
     unknown_usage()?;
   }
 
   Ok(Attribute::new(attr[0], attr[1], attr[2]))
+}
+
+fn parse_i64(input: impl AsRef<str>) -> Result<i64, bool> {
+  i64::from_str(input.as_ref()).map_err(|_| unknown_usage().unwrap_err())
 }
 
 fn read_command() -> (String, Vec<String>) {
@@ -367,6 +382,8 @@ fn print_help() {
     更新区域等级
   updz <名字> req <游览时长>/<科普价值>/<吸引人流>
     更新区域需求
+  updz <名字> scaler <百分比>
+    更新区域基础数值缩放
 
   load <路径>
     从文件加载状态 默认 "state.json" (启动时自动尝试从 "state.json" 加载)
@@ -425,12 +442,14 @@ impl Default for State {
         Attribute::new(30, 30, 30),
         Attribute::new(10, 10, 10),
         Attribute::new(256, 220, 255),
+        100,
       ),
       Zone::new(
         "综合区-内",
         Attribute::new(80, 80, 80),
         Attribute::new(4, 8, 2),
         Attribute::new(205, 245, 150),
+        100,
       ),
     ];
 

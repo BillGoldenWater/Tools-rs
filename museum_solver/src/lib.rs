@@ -48,6 +48,14 @@ impl Attribute {
 
     self
   }
+
+  pub fn mul_byf(mut self, rhs: f64) -> Self {
+    self.time = (self.time as f64 * rhs) as i64;
+    self.value = (self.value as f64 * rhs) as i64;
+    self.popularity = (self.popularity as f64 * rhs) as i64;
+
+    self
+  }
 }
 
 impl Add for Attribute {
@@ -90,6 +98,12 @@ pub struct Zone {
   pub base: Attribute,
   pub sub_level: Attribute,
   pub require: Attribute,
+  #[serde(default = "default_base_scaler")]
+  pub base_scaler: u64,
+}
+
+fn default_base_scaler() -> u64 {
+  100
 }
 
 impl Zone {
@@ -98,19 +112,23 @@ impl Zone {
     base: Attribute,
     sub_level: Attribute,
     require: Attribute,
+    base_scaler: u64,
   ) -> Self {
     Self {
       name: name.into(),
       base,
       sub_level,
       require,
+      base_scaler,
     }
   }
 
   pub fn calc(&self, member: &[MemberInfo]) -> CalcResult {
     assert!(!member.is_empty() && member.len() <= 3);
 
-    let mut req = self.require.clone() - self.base.clone() - self.sub_level.clone().mul_by(10);
+    let mut req = self.require.clone()
+      - (self.base.clone() - self.sub_level.clone().mul_by(10))
+        .mul_byf(self.base_scaler as f64 / 100_f64);
     let mut require: u64 = 0;
     let mut overflow: u64 = 0;
 
@@ -144,7 +162,9 @@ impl Zone {
       .cloned()
       .fold(Attribute::new(0, 0, 0), |acc, it| acc + it);
 
-    member_sum + self.base.clone() + self.sub_level.clone().mul_by(10)
+    member_sum
+      + (self.base.clone() + self.sub_level.clone().mul_by(10))
+        .mul_byf(self.base_scaler as f64 / 100_f64)
   }
 }
 
