@@ -235,7 +235,11 @@ fn solve_inner(state: SolveState, cache: &mut HashMap<SolveState, SolveResult>) 
 
   for members in combinations {
     let mut result = state.current_zone().calc(&members);
-    let mut zones = HashMap::new();
+    if result >= min_result.0 {
+      continue;
+    }
+
+    let mut zones = HashMap::with_capacity(1);
 
     if state.can_next() {
       let next = solve_inner(state.next(&members), cache);
