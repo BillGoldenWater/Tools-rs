@@ -1,5 +1,5 @@
 [workspace]
-members = ["navigation_compass_solver", "museum_solver", "tools_wasm"]
+members = ["navigation_compass_solver", "museum_solver", "bin_by_img", "tools_wasm"]
 
 [profile.release]
 panic = "abort" # Strip expensive panic clean-up logic
