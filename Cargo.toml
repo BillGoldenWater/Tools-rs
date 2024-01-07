@@ -1,5 +1,5 @@
 [workspace]
-members = ["bad_apple_in_waveform", "navigation_compass_solver", "museum_solver", "bin_by_img", "tools_wasm"]
+members = ["navigation_compass_solver", "museum_solver", "bin_by_img", "tools_wasm", "video_in_waveform"]
 resolver = "2"
 
 [profile.release]

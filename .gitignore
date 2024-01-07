@@ -4,4 +4,6 @@
 **/.idea
 **/dist
 **/node_modules
+in
+out
 tools_wasm/pkg
