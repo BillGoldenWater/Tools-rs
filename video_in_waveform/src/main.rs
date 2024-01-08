@@ -8,7 +8,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
 #[derive(argh::FromArgs)]
-/// convert image(s) to display in waveform
+/// convert images to display in waveform
 struct Args {
   /// path to dir that contains all input images
   #[argh(option, short = 'i')]
@@ -16,13 +16,13 @@ struct Args {
   /// path to dir that will output to
   #[argh(option, short = 'o')]
   pub output: Option<PathBuf>,
-  /// thread num
+  /// thread number
   #[argh(option, short = 't')]
   pub thread_num: Option<usize>,
   /// the target waveform height
   #[argh(option, short = 'h')]
   pub waveform_height: Option<u32>,
-  /// the brightness level of a pixel
+  /// the number of brightness level of a pixel
   #[argh(option, short = 'p')]
   pub px_multi: Option<u32>,
   /// enable 16bit output
