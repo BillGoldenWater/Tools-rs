@@ -1,38 +1,92 @@
-use std::path::Path;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
+use image::buffer::ConvertBuffer;
 use image::imageops::FilterType;
 use image::{GenericImageView, ImageBuffer, Rgb};
+use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
+#[derive(argh::FromArgs)]
+/// convert image(s) to display in waveform
+struct Args {
+  /// path to dir that contains all input images
+  #[argh(option, short = 'i')]
+  pub input: Option<PathBuf>,
+  /// path to dir that will output to
+  #[argh(option, short = 'o')]
+  pub output: Option<PathBuf>,
+  /// thread num
+  #[argh(option, short = 't')]
+  pub thread_num: Option<usize>,
+  /// the target waveform height
+  #[argh(option, short = 'h')]
+  pub waveform_height: Option<u32>,
+  /// the brightness level of a pixel
+  #[argh(option, short = 'p')]
+  pub px_multi: Option<u32>,
+  /// enable 16bit output
+  #[argh(switch)]
+  pub use_16bit: bool,
+}
+
+static DEFAULT_IN: OnceLock<PathBuf> = OnceLock::new();
+static DEFAULT_OUT: OnceLock<PathBuf> = OnceLock::new();
+
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-  let files = std::fs::read_dir("in")?
+  DEFAULT_IN.get_or_init(|| PathBuf::from("in"));
+  DEFAULT_OUT.get_or_init(|| PathBuf::from("out"));
+
+  run(&argh::from_env())
+}
+
+fn run(args: &Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  let files = std::fs::read_dir(args.input.as_ref().unwrap_or(DEFAULT_IN.get().unwrap()))?
     .map(|it| it.map(|it| it.path()))
     .collect::<Result<Vec<_>, _>>()?;
 
-  std::fs::create_dir_all("out")?;
+  std::fs::create_dir_all(args.output.as_ref().unwrap_or(DEFAULT_OUT.get().unwrap()))?;
 
-  let count = AtomicUsize::new(0);
+  if let Some(thread_num) = args.thread_num.as_ref().copied() {
+    rayon::ThreadPoolBuilder::new()
+      .num_threads(thread_num.max(1))
+      .build_global()?;
+  }
+
+  let bar = ProgressBar::new(files.len() as u64).with_style(ProgressStyle::with_template(
+    "[{elapsed}] {bar} {percent}% [{pos}/{len}] eta: {eta} {per_sec}",
+  )?);
+
   files.par_iter().try_for_each(|file| {
-    let count = count.fetch_add(1, Ordering::SeqCst);
-    println!("{:.2}", count as f64 / files.len() as f64 * 100.0);
-    convert(
+    let ret = convert(
+      args,
       file.parent().unwrap(),
       file.file_name().unwrap().to_str().unwrap(),
-    )
+    );
+
+    bar.inc(1);
+
+    ret
   })?;
+
+  bar.finish();
+  println!("done");
 
   Ok(())
 }
 
-fn convert(path: &Path, name: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn convert(
+  args: &Args,
+  path: &Path,
+  name: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
   let img = image::open(path.join(name))?;
   let (width, _) = img.dimensions();
 
-  type Target = u8;
+  type Target = u16;
 
-  let waveform_height = 1080;
-  let px_multi = 8_u32;
+  let waveform_height = args.waveform_height.unwrap_or(1024);
+  let px_multi = args.px_multi.unwrap_or(2);
 
   let target_height = waveform_height * px_multi;
 
@@ -66,7 +120,18 @@ fn convert(path: &Path, name: &str) -> Result<(), Box<dyn std::error::Error + Se
     }
   }
 
-  out_img.save(format!("out/{name}"))?;
+  let out = args
+    .output
+    .as_ref()
+    .unwrap_or(DEFAULT_OUT.get().unwrap())
+    .join(name);
+
+  if args.use_16bit {
+    out_img.save(out)?;
+  } else {
+    let out_img: ImageBuffer<Rgb<u8>, _> = out_img.convert();
+    out_img.save(out)?;
+  }
 
   Ok(())
 }
