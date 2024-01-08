@@ -95,8 +95,8 @@ fn convert(
   let y_scale = Target::MAX as f64 / waveform_height as f64;
   let px_scale = px_multi as f64 / u8::MAX as f64;
 
-  let mut colors =
-    vec![vec![Vec::<Target>::with_capacity(target_height as usize); width as usize]; 3];
+  let mut out_img = ImageBuffer::<Rgb<Target>, _>::new(width, target_height);
+  let mut y_count = vec![vec![0; width as usize]; 3];
 
   for (x, y, color) in img.pixels() {
     for (ch, &value) in color.0.iter().take(3).enumerate() {
@@ -104,18 +104,11 @@ fn convert(
       let y = y as i64 - Target::MAX as i64;
       let y = y.unsigned_abs() as Target;
 
-      for _ in 0..(value as f64 * px_scale) as usize {
-        colors[ch][x as usize].push(y);
-      }
-    }
-  }
+      let count = &mut y_count[ch][x as usize];
 
-  let mut out_img = ImageBuffer::<Rgb<Target>, _>::new(width, target_height);
-  for (ch, colors) in colors.iter().enumerate() {
-    for (x, col) in colors.iter().enumerate() {
-      for (y, &value) in col.iter().enumerate() {
-        let px = out_img.get_pixel_mut(x as u32, y as u32);
-        px.0[ch] = value;
+      for _ in 0..(value as f64 * px_scale) as usize {
+        out_img.get_pixel_mut(x, *count).0[ch] = y;
+        *count += 1;
       }
     }
   }
