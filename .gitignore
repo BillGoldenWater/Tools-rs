@@ -1,9 +1,10 @@
-**/target
 **/Cargo.lock
 **/.DS_Store
 **/.idea
 **/dist
 **/node_modules
-in
-out
-tools_wasm/pkg
+/.test
+/in
+/out
+/tools_wasm/pkg
+/target
