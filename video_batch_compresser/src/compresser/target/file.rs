@@ -89,7 +89,7 @@ pub fn run(target_cfg: &Target, file: PathBuf) -> anyhow::Result<()> {
 
     let output_base = target_cfg
         .output
-        .join(format!("{}-{}", time.year(), time.month()));
+        .join(format!("{:0>4}-{:0>2}", time.year(), time.month()));
     if !output_base
         .try_exists()
         .context("failed to check is output dir exists")?
