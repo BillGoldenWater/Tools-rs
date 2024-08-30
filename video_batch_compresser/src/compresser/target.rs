@@ -1,11 +1,11 @@
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, Context as _};
 use tracing::info;
 
-use crate::config::target::Target;
+use crate::{config::target::Target, context::Context};
 
 pub mod file;
 
-pub fn run(target: Target) -> anyhow::Result<()> {
+pub fn run(ctx: &Context, target: Target) -> anyhow::Result<()> {
     info!(
         "compressing target: {:?}, output to: {:?}",
         target.input, target.output
@@ -45,7 +45,7 @@ pub fn run(target: Target) -> anyhow::Result<()> {
             continue;
         }
 
-        file::run(&target, path)?;
+        file::run(ctx, &target, path)?;
     }
 
     Ok(())

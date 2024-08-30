@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, Context as _};
 use chrono::{Datelike, TimeDelta, Utc};
 use tracing::{debug, info};
 
-use crate::{config::target::Target, ffmpeg};
+use crate::{config::target::Target, context::Context, ffmpeg};
 
-pub fn run(target_cfg: &Target, file: PathBuf) -> anyhow::Result<()> {
+pub fn run(ctx: &Context, target_cfg: &Target, file: PathBuf) -> anyhow::Result<()> {
     let file_name = file
         .file_name()
         .ok_or_else(|| anyhow!("failed to get file name of the entry"))?
@@ -72,7 +72,7 @@ pub fn run(target_cfg: &Target, file: PathBuf) -> anyhow::Result<()> {
 
     info!("associated files: {associated_files:?}");
 
-    let temp = target_cfg.output.join("video_batch_compresser.temp.mkv");
+    let temp = ctx.cwd.join("video_batch_compresser.temp.mkv");
     if temp
         .try_exists()
         .context("failed to check is temp file exists")?
