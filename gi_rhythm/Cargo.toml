@@ -1,0 +1,10 @@
+[package]
+name = "gi_rhythm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+image = "0.25.1"
+itertools = "0.12.1"
+rayon = "1.10.0"

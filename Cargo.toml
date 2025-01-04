@@ -1,5 +1,5 @@
 [workspace]
-members = ["navigation_compass_solver", "museum_solver", "bin_by_img", "tools_wasm", "video_in_waveform", "video_batch_compresser"]
+members = ["navigation_compass_solver", "museum_solver", "bin_by_img", "tools_wasm", "video_in_waveform", "video_batch_compresser", "gi_rhythm"]
 resolver = "2"
 
 [profile.release]
