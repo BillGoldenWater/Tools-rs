@@ -1,0 +1,13 @@
+[package]
+name = "img_blender"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.97"
+argh = "0.1.13"
+color = "0.2.3"
+glam = "0.30.0"
+image = "0.25.5"
+rayon = "1.10.0"
+strum = { version = "0.27.1", features = ["derive"] }
