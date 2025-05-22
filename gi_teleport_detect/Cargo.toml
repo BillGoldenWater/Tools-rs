@@ -1,0 +1,13 @@
+[package]
+name = "gi_teleport_detect"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+glam = "0.30.3"
+image = "0.23.14"
+img_hash = "3.2.0"
+itertools = "0.14.0"
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.8.22"

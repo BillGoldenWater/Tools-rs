@@ -7,6 +7,7 @@ members = [
     "video_in_waveform",
     "video_batch_compresser",
     "gi_rhythm",
+    "gi_teleport_detect",
     "img_blender",
 ]
 resolver = "2"
