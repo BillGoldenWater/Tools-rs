@@ -42,7 +42,6 @@ pub fn read_files(
 
             let path = entry.path();
 
-            info!("processing {:?}", path);
             let metadata = entry
                 .metadata()
                 .context("failed to read metadata of entry")?;

@@ -13,6 +13,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
     for target_cfg in &config.target {
         for (path, size) in target::read_files(target_cfg)? {
+            info!("processing {:?}", path);
             let keep = file::filter(target_cfg, &path)?.is_some();
             files.push((size, path, target_cfg, keep));
         }
