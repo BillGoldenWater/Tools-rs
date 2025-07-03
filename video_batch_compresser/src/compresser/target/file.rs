@@ -1,16 +1,24 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, anyhow};
-use chrono::{Datelike, TimeDelta, Utc};
+use chrono::{DateTime, Datelike, TimeDelta, Utc};
 use tracing::{debug, info};
 
 use crate::{config::target::Target, context::Context, ffmpeg};
 
-pub fn run(
-    ctx: &Context,
+pub struct FileData {
+    file_name: Box<str>,
+    time: DateTime<Utc>,
+    mark_path: PathBuf,
+    associated_files: Vec<PathBuf>,
+}
+
+/// # Returns
+/// None if filtered out
+pub fn filter(
     target_cfg: &Target,
     file: &Path,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Option<FileData>> {
     let file_name = file
         .file_name()
         .ok_or_else(|| anyhow!("failed to get file name of the entry"))?
@@ -19,7 +27,7 @@ pub fn run(
 
     if !target_cfg.filter.get()?.is_match(file_name) {
         info!("filtered out, by regex");
-        return Ok(());
+        return Ok(None);
     }
 
     let time = target_cfg
@@ -42,7 +50,7 @@ pub fn run(
         .ok_or_else(|| anyhow!("failed to do (time + filter_before)"))?;
     if time_added.ge(&Utc::now()) {
         info!("filtered out, by time");
-        return Ok(());
+        return Ok(None);
     }
 
     let mut mark_path = file.to_path_buf();
@@ -52,10 +60,8 @@ pub fn run(
         .context("failed to check is marker exists")?
     {
         info!("filtered out, by marker");
-        return Ok(());
+        return Ok(None);
     }
-
-    info!("input: {}", file_name);
 
     let mut associated_files = vec![];
     for extractor in &target_cfg.associated_file_extractor {
@@ -80,6 +86,30 @@ pub fn run(
         associated_files.push(path);
     }
 
+    Ok(Some(FileData {
+        file_name: file_name.into(),
+        time: time.to_utc(),
+        mark_path,
+        associated_files,
+    }))
+}
+
+pub fn run(
+    ctx: &Context,
+    target_cfg: &Target,
+    file: &Path,
+) -> anyhow::Result<()> {
+    let Some(FileData {
+        file_name,
+        time,
+        mark_path,
+        associated_files,
+    }) = filter(target_cfg, file)?
+    else {
+        return Ok(());
+    };
+
+    info!("input: {}", file_name);
     info!("associated files: {associated_files:?}");
 
     let temp = ctx.cwd.join("video_batch_compresser.temp.mkv");
@@ -98,7 +128,7 @@ pub fn run(
     )
     .context("failed to compress")?;
 
-    let mut output_file_name = PathBuf::from(file_name);
+    let mut output_file_name = PathBuf::from(&*file_name);
     output_file_name.set_extension("mkv");
 
     let output_base = target_cfg.output.join(format!(

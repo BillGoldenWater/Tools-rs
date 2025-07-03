@@ -11,7 +11,7 @@ pub fn read_files(
     target: &Target,
 ) -> anyhow::Result<Vec<(PathBuf, u64)>> {
     info!(
-        "compressing target: {:?}, output to: {:?}",
+        "reading target: {:?}, will output to: {:?}",
         target.input, target.output
     );
 
