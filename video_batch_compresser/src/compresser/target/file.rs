@@ -144,6 +144,7 @@ pub fn run(
         let args = presets.get(id).with_context(|| {
             format!("can't found ffmpeg args preset by id: {id}")
         })?;
+        debug!("using ffmpeg args preset: {id}");
         args.as_slice()
     };
 

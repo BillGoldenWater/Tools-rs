@@ -19,7 +19,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
     let mut filtered_out_by_time = 0_u64;
     for target_cfg in &config.target {
         for (path, size) in target::read_files(target_cfg)? {
-            debug!("preprocessing {:?}", path);
+            debug!("checking {:?}", path);
             let result = file::filter(target_cfg, &path)?;
 
             let keep = matches!(result, FilterResult::Process(_));
@@ -34,6 +34,11 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
     let mut filtered_out = files.len();
     files.retain(|(_, _, _, keep)| *keep);
     filtered_out -= files.len();
+
+    info!(
+        "filterted out {filtered_out} files, {filtered_out_by_time} by time"
+    );
+
     files.sort_by_key(|(size, ..)| *size);
 
     let total_size = files.iter().map(|(size, ..)| *size).sum::<u64>();
@@ -66,7 +71,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
         let percent = total_processed as f64 / total_size as f64 * 100.;
 
         #[expect(clippy::cast_precision_loss)]
-        let compress_ratio =
+        let compressed_size =
             total_compressed as f64 / total_processed as f64 * 100.;
 
         // eta
@@ -82,7 +87,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
         };
 
         info!(
-            "processed: {}/{}({percent:.2}%), compress_ratio: {compress_ratio:.2}%",
+            "processed: {}/{}({percent:.2}%), compressed size: {compressed_size:.2}%",
             format_bytes(total_processed),
             total_size_str,
         );
@@ -92,10 +97,6 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
             format_duration(Duration::from_secs_f64(eta)),
         );
     }
-
-    info!(
-        "finished, filterted out {filtered_out} files, {filtered_out_by_time} by time"
-    );
 
     Ok(())
 }
