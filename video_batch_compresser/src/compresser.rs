@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use humantime::format_duration;
 use tracing::info;
 
 use crate::{compresser::target::file, config::Config, context::Context};
@@ -28,7 +29,8 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
         .si()
         .to_string()
         .into_boxed_str();
-    let mut processed = 0;
+    let mut total_processed = 0;
+    let mut total_compressed = 0;
     let start = Instant::now();
 
     for (size, path, target_cfg, _) in files {
@@ -36,27 +38,37 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
             "processing: ({}) {path:?}",
             bytesize::ByteSize::b(size).display().si()
         );
-        file::run(ctx, target_cfg, &path)?;
-        processed += size;
+        total_compressed += file::run(ctx, target_cfg, &path)?;
+        total_processed += size;
 
         #[expect(clippy::cast_precision_loss)]
-        let percent = processed as f64 / total_size as f64 * 100.;
+        let percent = total_processed as f64 / total_size as f64 * 100.;
+
+        #[expect(clippy::cast_precision_loss)]
+        let compress_ratio =
+            total_compressed as f64 / total_processed as f64 * 100.;
+
+        // eta
         let elapsed = start.elapsed();
         #[expect(clippy::cast_precision_loss)]
-        let speed = processed as f64 / elapsed.as_secs_f64();
-        let to_process = total_size - processed;
+        let speed = total_processed as f64 / elapsed.as_secs_f64();
+        let to_process = total_size - total_processed;
         #[expect(clippy::cast_precision_loss)]
         let eta = if to_process > 0 {
             to_process as f64 / speed
         } else {
             0.
         };
+
         info!(
-            "processed: {}/{}({percent:.2}%), elpased: {}, eta: +{}",
-            bytesize::ByteSize::b(processed).display().si(),
+            "processed: {}/{}({percent:.2}%), compress_ratio: {compress_ratio:.2}%",
+            bytesize::ByteSize::b(total_processed).display().si(),
             total_size_str,
-            humantime::format_duration(elapsed),
-            humantime::format_duration(Duration::from_secs_f64(eta)),
+        );
+        info!(
+            "elpased: {}, eta: +{}",
+            format_duration(elapsed),
+            format_duration(Duration::from_secs_f64(eta)),
         );
     }
 

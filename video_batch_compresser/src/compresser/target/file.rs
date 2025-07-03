@@ -1,6 +1,9 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-use anyhow::{Context as _, anyhow};
+use anyhow::{Context as _, anyhow, bail};
 use chrono::{DateTime, Datelike, TimeDelta, Utc};
 use tracing::{debug, info};
 
@@ -94,11 +97,13 @@ pub fn filter(
     }))
 }
 
+/// # Returns
+/// compressed size
 pub fn run(
     ctx: &Context,
     target_cfg: &Target,
     file: &Path,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<u64> {
     let Some(FileData {
         file_name,
         time,
@@ -106,7 +111,7 @@ pub fn run(
         associated_files,
     }) = filter(target_cfg, file)?
     else {
-        return Ok(());
+        bail!("something changed during compression");
     };
 
     info!("input: {}", file_name);
@@ -154,6 +159,11 @@ pub fn run(
         return Err(anyhow!("has things exists at the target location"));
     }
 
+    let compressed_metadata = fs::metadata(&temp)
+        .context("read metadata of compressed temp file")?;
+    assert!(compressed_metadata.is_file());
+    let compressed_size = compressed_metadata.len();
+
     info!("moving compressed file");
     std::fs::rename(temp, output)
         .context("failed to move compressed file to the output path")?;
@@ -183,5 +193,5 @@ pub fn run(
     std::fs::write(mark_path, "")
         .context("failed to create compressed mark")?;
 
-    Ok(())
+    Ok(compressed_size)
 }
