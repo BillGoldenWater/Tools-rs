@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{
+    collections::HashMap,
+    fs::{self},
+    path::PathBuf,
+};
 
 use anyhow::Context as _;
 
@@ -13,9 +17,16 @@ impl Context {
         let cwd = std::env::current_dir()
             .context("failed to get current working directory")?;
         let speed_cache = {
-            let cache = fs::read_to_string(cwd.join("speed_cache.toml"))
-                .context("read compression speed cache")?;
-            toml::from_str(&cache).context("parse speed cache")?
+            let cache_path = cwd.join("speed_cache.toml");
+            let exists = fs::exists(&cache_path)
+                .context("fs::exists(cache_path)")?;
+            if exists {
+                let cache = fs::read_to_string(cache_path)
+                    .context("read compression speed cache")?;
+                toml::from_str(&cache).context("parse speed cache")?
+            } else {
+                Default::default()
+            }
         };
 
         Ok(Self { cwd, speed_cache })
