@@ -13,7 +13,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
     for target_cfg in &config.target {
         for (path, size) in target::read_files(target_cfg)? {
-            info!("processing {:?}", path);
+            info!("preprocessing {:?}", path);
             let keep = file::filter(target_cfg, &path)?.is_some();
             files.push((size, path, target_cfg, keep));
         }
@@ -33,7 +33,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
     for (size, path, target_cfg, _) in files {
         info!(
-            "file to process: ({}) {path:?}",
+            "processing: ({}) {path:?}",
             bytesize::ByteSize::b(size).display().si()
         );
         file::run(ctx, target_cfg, &path)?;
