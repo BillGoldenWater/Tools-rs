@@ -134,19 +134,7 @@ pub fn run(
         return Err(anyhow!("has things exists at {temp:?}"));
     }
 
-    let args = if let Some(args) = &target_cfg.ffmpeg_args {
-        args.as_slice()
-    } else {
-        let id = target_cfg
-            .ffmpeg_args_id
-            .as_ref()
-            .context("must specify ffmpeg_args or ffmpeg_args_id")?;
-        let args = presets.get(id).with_context(|| {
-            format!("can't found ffmpeg args preset by id: {id}")
-        })?;
-        debug!("using ffmpeg args preset: {id}");
-        args.as_slice()
-    };
+    let args = target_cfg.get_ffmpeg_args(presets)?;
 
     info!("compressing");
     ffmpeg::run(file.as_os_str(), args, temp.as_os_str())

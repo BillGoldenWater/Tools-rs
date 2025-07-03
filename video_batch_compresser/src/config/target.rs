@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
+
+use anyhow::Context as _;
 
 use self::{cached_regex::CachedRegex, regex_replace::RegexReplace};
 
@@ -24,4 +26,27 @@ pub struct Target {
     pub ffmpeg_args: Option<Vec<String>>,
     /// args template id
     pub ffmpeg_args_id: Option<String>,
+}
+
+impl Target {
+    pub fn get_ffmpeg_args<'a>(
+        &'a self,
+        presets: &'a HashMap<String, Vec<String>>,
+    ) -> anyhow::Result<&'a [String]> {
+        let args = if let Some(args) = &self.ffmpeg_args {
+            args.as_slice()
+        } else {
+            let id = self
+                .ffmpeg_args_id
+                .as_ref()
+                .context("must specify ffmpeg_args or ffmpeg_args_id")?;
+            let args = presets.get(id).with_context(|| {
+                format!("can't found ffmpeg args preset by id: {id}")
+            })?;
+            tracing::debug!("using ffmpeg args preset: {id}");
+            args.as_slice()
+        };
+
+        Ok(args)
+    }
 }

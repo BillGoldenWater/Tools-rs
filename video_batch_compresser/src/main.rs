@@ -29,7 +29,7 @@ fn main() -> anyhow::Result<()> {
         .init();
 
     let args = argh::from_env::<Args>();
-    let ctx =
+    let mut ctx =
         context::Context::new().context("failed to contruct Context")?;
 
     let config_path =
@@ -39,7 +39,7 @@ fn main() -> anyhow::Result<()> {
     let config: Config =
         toml::from_str(&config).context("failed to parse config file")?;
 
-    compresser::run(&ctx, &config)?;
+    compresser::run(&mut ctx, &config)?;
 
     Ok(())
 }
