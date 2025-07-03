@@ -23,7 +23,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
             let result = file::filter(target_cfg, &path)?;
 
             let keep = matches!(result, FilterResult::Process(_));
-            if let FilterResult::ByTime = result {
+            if matches!(result, FilterResult::ByTime) {
                 filtered_out_by_time += 1;
             }
 
@@ -46,12 +46,15 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
     let mut total_compressed = 0;
     let start = Instant::now();
 
-    for (size, path, target_cfg, _) in files {
-        info!(
-            "processing: ({}) {path:?}",
-            bytesize::ByteSize::b(size).display().si()
-        );
-        total_compressed += file::run(ctx, target_cfg, &path)?;
+    let mut files_iter = files.iter().peekable();
+
+    while let Some((size, path, target_cfg, _)) = files_iter.next() {
+        info!("processing: ({}) {path:?}", format_bytes(*size));
+        if let Some((size, path, ..)) = files_iter.peek() {
+            info!("next: ({}) {path:?}", format_bytes(*size));
+        }
+
+        total_compressed += file::run(ctx, target_cfg, path)?;
         total_processed += size;
 
         #[expect(clippy::cast_precision_loss)]
@@ -75,7 +78,7 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
         info!(
             "processed: {}/{}({percent:.2}%), compress_ratio: {compress_ratio:.2}%",
-            bytesize::ByteSize::b(total_processed).display().si(),
+            format_bytes(total_processed),
             total_size_str,
         );
         info!(
@@ -90,4 +93,8 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
     );
 
     Ok(())
+}
+
+fn format_bytes(size: u64) -> bytesize::Display {
+    bytesize::ByteSize::b(size).display().si()
 }
