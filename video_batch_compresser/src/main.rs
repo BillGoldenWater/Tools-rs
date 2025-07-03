@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
     let config: Config =
         toml::from_str(&config).context("failed to parse config file")?;
 
-    compresser::run(&ctx, config)?;
+    compresser::run(&ctx, &config)?;
 
     Ok(())
 }

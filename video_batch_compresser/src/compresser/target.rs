@@ -1,11 +1,15 @@
+use std::path::PathBuf;
+
 use anyhow::{Context as _, anyhow};
 use tracing::info;
 
-use crate::{config::target::Target, context::Context};
+use crate::config::target::Target;
 
 pub mod file;
 
-pub fn run(ctx: &Context, target: &Target) -> anyhow::Result<()> {
+pub fn read_files(
+    target: &Target,
+) -> anyhow::Result<Vec<(PathBuf, u64)>> {
     info!(
         "compressing target: {:?}, output to: {:?}",
         target.input, target.output
@@ -28,27 +32,32 @@ pub fn run(ctx: &Context, target: &Target) -> anyhow::Result<()> {
         return Err(anyhow!("invalid output path, expect directory"));
     }
 
-    for entry in target
+    target
         .input
         .read_dir()
         .context("failed to read input directory")?
-    {
-        let entry =
-            entry.context("failed to access entry in input directory")?;
-        let path = entry.path();
+        .map(|entry| {
+            let entry = entry
+                .context("failed to access entry in input directory")?;
 
-        info!("processing {:?}", path);
-        let metadata = entry
-            .metadata()
-            .context("failed to read metadata of entry")?;
+            let path = entry.path();
 
-        if !metadata.is_file() {
-            info!("isn't file, skipping");
-            continue;
-        }
+            info!("processing {:?}", path);
+            let metadata = entry
+                .metadata()
+                .context("failed to read metadata of entry")?;
 
-        file::run(ctx, target, &path)?;
-    }
+            if !metadata.is_file() {
+                info!("isn't file, skipping");
+                return Ok(None);
+            }
+            let file_size = metadata.len();
 
-    Ok(())
+            Ok(Some((path, file_size)))
+        })
+        .filter_map(|it| match it {
+            Ok(it) => it.map(Ok),
+            Err(err) => Some(Err(err)),
+        })
+        .collect::<Result<Vec<_>, _>>()
 }
