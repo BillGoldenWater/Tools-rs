@@ -21,5 +21,7 @@ pub struct Target {
     /// non exists file will be ignore
     pub associated_file_extractor: Vec<RegexReplace>,
     /// args to put between input and output
-    pub ffmpeg_args: Vec<String>,
+    pub ffmpeg_args: Option<Vec<String>>,
+    /// args template id
+    pub ffmpeg_args_id: Option<String>,
 }

@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
@@ -109,6 +110,7 @@ pub fn filter(
 pub fn run(
     ctx: &Context,
     target_cfg: &Target,
+    presets: &HashMap<String, Vec<String>>,
     file: &Path,
 ) -> anyhow::Result<u64> {
     let FilterResult::Process(FileData {
@@ -132,13 +134,22 @@ pub fn run(
         return Err(anyhow!("has things exists at {temp:?}"));
     }
 
+    let args = if let Some(args) = &target_cfg.ffmpeg_args {
+        args.as_slice()
+    } else {
+        let id = target_cfg
+            .ffmpeg_args_id
+            .as_ref()
+            .context("must specify ffmpeg_args or ffmpeg_args_id")?;
+        let args = presets.get(id).with_context(|| {
+            format!("can't found ffmpeg args preset by id: {id}")
+        })?;
+        args.as_slice()
+    };
+
     info!("compressing");
-    ffmpeg::run(
-        file.as_os_str(),
-        &target_cfg.ffmpeg_args,
-        temp.as_os_str(),
-    )
-    .context("failed to compress")?;
+    ffmpeg::run(file.as_os_str(), args, temp.as_os_str())
+        .context("failed to compress")?;
 
     let mut output_file_name = PathBuf::from(&*file_name);
     output_file_name.set_extension("mkv");

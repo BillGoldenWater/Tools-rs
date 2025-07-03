@@ -54,7 +54,12 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
             info!("next: ({}) {path:?}", format_bytes(*size));
         }
 
-        total_compressed += file::run(ctx, target_cfg, path)?;
+        total_compressed += file::run(
+            ctx,
+            target_cfg,
+            &config.ffmpeg_args_presets,
+            path,
+        )?;
         total_processed += size;
 
         #[expect(clippy::cast_precision_loss)]
