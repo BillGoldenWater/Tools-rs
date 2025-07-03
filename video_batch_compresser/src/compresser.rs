@@ -17,11 +17,8 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
     files.sort_by_key(|(size, ..)| *size);
 
-    for (size, path, _) in &files {
+    for (size, path, target) in files {
         info!("file to process: ({size}){path:?}");
-    }
-
-    for (_, path, target) in files {
         file::run(ctx, target, &path)?;
     }
 
