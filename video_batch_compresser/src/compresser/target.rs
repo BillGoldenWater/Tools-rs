@@ -1,11 +1,11 @@
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 use tracing::info;
 
 use crate::{config::target::Target, context::Context};
 
 pub mod file;
 
-pub fn run(ctx: &Context, target: Target) -> anyhow::Result<()> {
+pub fn run(ctx: &Context, target: &Target) -> anyhow::Result<()> {
     info!(
         "compressing target: {:?}, output to: {:?}",
         target.input, target.output
@@ -20,7 +20,8 @@ pub fn run(ctx: &Context, target: Target) -> anyhow::Result<()> {
         .try_exists()
         .context("failed to check is output dir exists")?
     {
-        std::fs::create_dir_all(&target.output).context("failed to create output dir")?;
+        std::fs::create_dir_all(&target.output)
+            .context("failed to create output dir")?;
     }
 
     if !target.output.is_dir() {
@@ -32,7 +33,8 @@ pub fn run(ctx: &Context, target: Target) -> anyhow::Result<()> {
         .read_dir()
         .context("failed to read input directory")?
     {
-        let entry = entry.context("failed to access entry in input directory")?;
+        let entry =
+            entry.context("failed to access entry in input directory")?;
         let path = entry.path();
 
         info!("processing {:?}", path);
@@ -45,7 +47,7 @@ pub fn run(ctx: &Context, target: Target) -> anyhow::Result<()> {
             continue;
         }
 
-        file::run(ctx, &target, path)?;
+        file::run(ctx, target, &path)?;
     }
 
     Ok(())

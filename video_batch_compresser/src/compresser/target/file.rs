@@ -1,12 +1,16 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 use chrono::{Datelike, TimeDelta, Utc};
 use tracing::{debug, info};
 
 use crate::{config::target::Target, context::Context, ffmpeg};
 
-pub fn run(ctx: &Context, target_cfg: &Target, file: PathBuf) -> anyhow::Result<()> {
+pub fn run(
+    ctx: &Context,
+    target_cfg: &Target,
+    file: &Path,
+) -> anyhow::Result<()> {
     let file_name = file
         .file_name()
         .ok_or_else(|| anyhow!("failed to get file name of the entry"))?
@@ -22,10 +26,16 @@ pub fn run(ctx: &Context, target_cfg: &Target, file: PathBuf) -> anyhow::Result<
         .time_extractor
         .replace(file_name)
         .context("failed to extract time")?;
-    let time = chrono::DateTime::parse_from_rfc3339(&time)
-        .with_context(|| format!("failed to parse extracted time by rfc3339: {:?}", time))?;
+    let time =
+        chrono::DateTime::parse_from_rfc3339(&time).with_context(
+            || {
+                format!(
+                    "failed to parse extracted time by rfc3339: {time:?}",
+                )
+            },
+        )?;
 
-    let delta = TimeDelta::try_days(target_cfg.filter_before as i64)
+    let delta = TimeDelta::try_days(i64::from(target_cfg.filter_before))
         .ok_or_else(|| anyhow!("invalid duration"))?;
     let time_added = time
         .checked_add_signed(delta)
@@ -35,8 +45,8 @@ pub fn run(ctx: &Context, target_cfg: &Target, file: PathBuf) -> anyhow::Result<
         return Ok(());
     }
 
-    let mut mark_path = file.clone();
-    mark_path.set_file_name(format!("{}.compressed_mark", file_name));
+    let mut mark_path = file.to_path_buf();
+    mark_path.set_file_name(format!("{file_name}.compressed_mark"));
     if mark_path
         .try_exists()
         .context("failed to check is marker exists")?
@@ -81,57 +91,67 @@ pub fn run(ctx: &Context, target_cfg: &Target, file: PathBuf) -> anyhow::Result<
     }
 
     info!("compressing");
-    ffmpeg::run(file.as_os_str(), &target_cfg.ffmpeg_args, temp.as_os_str())
-        .context("failed to compress")?;
+    ffmpeg::run(
+        file.as_os_str(),
+        &target_cfg.ffmpeg_args,
+        temp.as_os_str(),
+    )
+    .context("failed to compress")?;
 
     let mut output_file_name = PathBuf::from(file_name);
     output_file_name.set_extension("mkv");
 
-    let output_base = target_cfg
-        .output
-        .join(format!("{:0>4}-{:0>2}", time.year(), time.month()));
+    let output_base = target_cfg.output.join(format!(
+        "{:0>4}-{:0>2}",
+        time.year(),
+        time.month()
+    ));
     if !output_base
         .try_exists()
         .context("failed to check is output dir exists")?
     {
-        std::fs::create_dir_all(&output_base).context("failed to create output dir")?;
+        std::fs::create_dir_all(&output_base)
+            .context("failed to create output dir")?;
     }
 
     let output = output_base.join(output_file_name);
 
     info!("output: {:?}", output);
 
-    if output
-        .try_exists()
-        .context("failed to check is output path already has things exists")?
-    {
+    if output.try_exists().context(
+        "failed to check is output path already has things exists",
+    )? {
         return Err(anyhow!("has things exists at the target location"));
     }
 
     info!("moving compressed file");
-    std::fs::rename(temp, output).context("failed to move compressed file to the output path")?;
+    std::fs::rename(temp, output)
+        .context("failed to move compressed file to the output path")?;
 
     for f in associated_files {
-        let output = output_base.join(
-            f.file_name()
-                .ok_or_else(|| anyhow!("failed to get file name of associated file"))?,
-        );
+        let output =
+            output_base.join(f.file_name().ok_or_else(|| {
+                anyhow!("failed to get file name of associated file")
+            })?);
 
-        if output
-            .try_exists()
-            .context("failed to check is output path already has things exists")?
-        {
-            return Err(anyhow!("has things exists at the target location"));
+        if output.try_exists().context(
+            "failed to check is output path already has things exists",
+        )? {
+            return Err(anyhow!(
+                "has things exists at the target location"
+            ));
         }
 
         info!("copying associated file {:?} to {:?}", f, output);
 
-        std::fs::copy(f, output)
-            .context("failed to copy the associated file to the output location")?;
+        std::fs::copy(f, output).context(
+            "failed to copy the associated file to the output location",
+        )?;
     }
 
     info!("done, creating marker");
-    std::fs::write(mark_path, "").context("failed to create compressed mark")?;
+    std::fs::write(mark_path, "")
+        .context("failed to create compressed mark")?;
 
     Ok(())
 }

@@ -8,7 +8,7 @@ pub fn run(ctx: &Context, config: Config) -> anyhow::Result<()> {
     info!("running");
 
     for target_cfg in config.target {
-        target::run(ctx, target_cfg)?;
+        target::run(ctx, &target_cfg)?;
     }
 
     Ok(())

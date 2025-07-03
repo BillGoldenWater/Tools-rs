@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, process::Command};
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 
 pub fn command(
     input: impl AsRef<OsStr>,
