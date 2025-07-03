@@ -16,12 +16,19 @@ pub struct FileData {
     associated_files: Vec<PathBuf>,
 }
 
+pub enum FilterResult {
+    ByRegex,
+    ByTime,
+    ByMarker,
+    Process(FileData),
+}
+
 /// # Returns
 /// None if filtered out
 pub fn filter(
     target_cfg: &Target,
     file: &Path,
-) -> anyhow::Result<Option<FileData>> {
+) -> anyhow::Result<FilterResult> {
     let file_name = file
         .file_name()
         .ok_or_else(|| anyhow!("failed to get file name of the entry"))?
@@ -29,8 +36,8 @@ pub fn filter(
         .ok_or_else(|| anyhow!("the file name isn't valid utf8"))?;
 
     if !target_cfg.filter.get()?.is_match(file_name) {
-        info!("filtered out, by regex");
-        return Ok(None);
+        debug!("filtered out, by regex");
+        return Ok(FilterResult::ByRegex);
     }
 
     let time = target_cfg
@@ -52,8 +59,8 @@ pub fn filter(
         .checked_add_signed(delta)
         .ok_or_else(|| anyhow!("failed to do (time + filter_before)"))?;
     if time_added.ge(&Utc::now()) {
-        info!("filtered out, by time");
-        return Ok(None);
+        debug!("filtered out, by time");
+        return Ok(FilterResult::ByTime);
     }
 
     let mut mark_path = file.to_path_buf();
@@ -62,8 +69,8 @@ pub fn filter(
         .try_exists()
         .context("failed to check is marker exists")?
     {
-        info!("filtered out, by marker");
-        return Ok(None);
+        debug!("filtered out, by marker");
+        return Ok(FilterResult::ByMarker);
     }
 
     let mut associated_files = vec![];
@@ -89,7 +96,7 @@ pub fn filter(
         associated_files.push(path);
     }
 
-    Ok(Some(FileData {
+    Ok(FilterResult::Process(FileData {
         file_name: file_name.into(),
         time: time.to_utc(),
         mark_path,
@@ -104,7 +111,7 @@ pub fn run(
     target_cfg: &Target,
     file: &Path,
 ) -> anyhow::Result<u64> {
-    let Some(FileData {
+    let FilterResult::Process(FileData {
         file_name,
         time,
         mark_path,

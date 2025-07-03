@@ -1,9 +1,13 @@
 use std::time::{Duration, Instant};
 
 use humantime::format_duration;
-use tracing::info;
+use tracing::{debug, info};
 
-use crate::{compresser::target::file, config::Config, context::Context};
+use crate::{
+    compresser::target::file::{self, FilterResult},
+    config::Config,
+    context::Context,
+};
 
 pub mod target;
 
@@ -12,15 +16,24 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
 
     let mut files = vec![];
 
+    let mut filtered_out_by_time = 0_u64;
     for target_cfg in &config.target {
         for (path, size) in target::read_files(target_cfg)? {
-            info!("preprocessing {:?}", path);
-            let keep = file::filter(target_cfg, &path)?.is_some();
+            debug!("preprocessing {:?}", path);
+            let result = file::filter(target_cfg, &path)?;
+
+            let keep = matches!(result, FilterResult::Process(_));
+            if let FilterResult::ByTime = result {
+                filtered_out_by_time += 1;
+            }
+
             files.push((size, path, target_cfg, keep));
         }
     }
 
+    let mut filtered_out = files.len();
     files.retain(|(_, _, _, keep)| *keep);
+    filtered_out -= files.len();
     files.sort_by_key(|(size, ..)| *size);
 
     let total_size = files.iter().map(|(size, ..)| *size).sum::<u64>();
@@ -52,10 +65,10 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
         let elapsed = start.elapsed();
         #[expect(clippy::cast_precision_loss)]
         let speed = total_processed as f64 / elapsed.as_secs_f64();
-        let to_process = total_size - total_processed;
+        let remaining = total_size - total_processed;
         #[expect(clippy::cast_precision_loss)]
-        let eta = if to_process > 0 {
-            to_process as f64 / speed
+        let eta = if remaining > 0 {
+            remaining as f64 / speed
         } else {
             0.
         };
@@ -71,6 +84,10 @@ pub fn run(ctx: &Context, config: &Config) -> anyhow::Result<()> {
             format_duration(Duration::from_secs_f64(eta)),
         );
     }
+
+    info!(
+        "finished, filterted out {filtered_out} files, {filtered_out_by_time} by time"
+    );
 
     Ok(())
 }
