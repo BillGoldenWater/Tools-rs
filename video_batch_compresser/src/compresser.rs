@@ -94,7 +94,16 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
             #[expect(clippy::cast_precision_loss)]
             let eta = *size as f64 / speed;
             let eta = Duration::from_secs_f64(eta);
-            info!("eta for this file: +{}", format_duration(eta));
+            #[expect(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss
+            )]
+            let speed = speed as u64;
+            info!(
+                "avg speed and eta for this file: {}/s +{}",
+                format_bytes(speed),
+                format_duration(eta)
+            );
         }
         if let Some((size, path, ..)) = files_iter.peek() {
             info!("next: ({}) {path:?}", format_bytes(*size));
