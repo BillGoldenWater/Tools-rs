@@ -65,15 +65,23 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
     let mut files_iter = files.iter().peekable();
 
     while let Some((size, path, target_cfg, _)) = files_iter.next() {
-        let speed_cache_id = if let Some(id) = &target_cfg.ffmpeg_args_id
-        {
-            id.to_string()
-        } else {
-            let args = target_cfg
-                .get_ffmpeg_args(&config.ffmpeg_args_presets)?;
+        let speed_cache_id = {
+            let ffmpeg_args_id =
+                if let Some(id) = &target_cfg.ffmpeg_args_id {
+                    id.to_string()
+                } else {
+                    let args = target_cfg
+                        .get_ffmpeg_args(&config.ffmpeg_args_presets)?;
+                    let mut hasher = DefaultHasher::new();
+                    args.hash(&mut hasher);
+                    hasher.finish().to_string()
+                };
+
             let mut hasher = DefaultHasher::new();
-            args.hash(&mut hasher);
-            hasher.finish().to_string()
+            target_cfg.input.hash(&mut hasher);
+            let target_id = hasher.finish().to_string();
+
+            format!("{ffmpeg_args_id}-{target_id}")
         };
         let cached_speed = ctx.speed_cache.get(&speed_cache_id).copied();
 
