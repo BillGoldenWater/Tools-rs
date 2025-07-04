@@ -83,7 +83,11 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
 
             format!("{ffmpeg_args_id}-{target_id}")
         };
-        let cached_speed = ctx.speed_cache.get(&speed_cache_id).copied();
+        let cached_speed = ctx
+            .speed_cache
+            .get(&speed_cache_id)
+            .copied()
+            .or_else(|| ctx.speed_cache.get("__all__").copied());
 
         info!("processing: ({}) {path:?}", format_bytes(*size));
         if let Some(speed) = cached_speed {
