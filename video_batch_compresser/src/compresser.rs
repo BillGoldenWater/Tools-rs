@@ -4,7 +4,8 @@ use std::{
 };
 
 use anyhow::Context as _;
-use humantime::format_duration;
+use chrono::Utc;
+use humantime::{FormattedDuration, format_duration};
 use tracing::{debug, info};
 
 use crate::{
@@ -58,7 +59,7 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
     if let Some(speed) = ctx.speed_cache.get("__all__").copied() {
         #[expect(clippy::cast_precision_loss)]
         let eta = total_size as f64 / speed;
-        info!("eta: +{}", format_duration(Duration::from_secs_f64(eta)));
+        info!("eta: {}", format_eta(Duration::from_secs_f64(eta)));
     }
 
     let start = Instant::now();
@@ -100,9 +101,9 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
             )]
             let speed = speed as u64;
             info!(
-                "avg speed and eta for this file: {}/s +{}",
+                "estimated speed and eta for this file: {}/s +{}",
                 format_bytes(speed),
-                format_duration(eta)
+                format_eta(eta)
             );
         }
         if let Some((size, path, ..)) = files_iter.peek() {
@@ -161,9 +162,9 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
             total_size_str,
         );
         info!(
-            "elpased: {}, eta: +{}",
-            format_duration(elapsed),
-            format_duration(Duration::from_secs_f64(eta)),
+            "elpased: {}, eta: {}",
+            format_dur(elapsed),
+            format_eta(Duration::from_secs_f64(eta)),
         );
 
         ctx.save().context("ctx.save()")?;
@@ -174,6 +175,18 @@ pub fn run(ctx: &mut Context, config: &Config) -> anyhow::Result<()> {
 
 fn format_bytes(size: u64) -> bytesize::Display {
     bytesize::ByteSize::b(size).display().si()
+}
+
+fn format_dur(dur: Duration) -> FormattedDuration {
+    let dur = dur.as_secs();
+    let dur = dur / 60;
+    let dur = dur * 60;
+    format_duration(Duration::from_secs(dur))
+}
+
+fn format_eta(dur: Duration) -> String {
+    let eta = Utc::now() + dur;
+    format!("{}(+{})", eta.to_rfc3339(), format_dur(dur))
 }
 
 /// <https://en.wikipedia.org/wiki/Exponential_smoothing>
