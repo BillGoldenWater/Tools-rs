@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Context as _;
-use chrono::Utc;
+use chrono::{SecondsFormat, Utc};
 use humantime::{FormattedDuration, format_duration};
 use tracing::{debug, info};
 
@@ -185,8 +185,9 @@ fn format_dur(dur: Duration) -> FormattedDuration {
 }
 
 fn format_eta(dur: Duration) -> String {
-    let eta = Utc::now() + Duration::from_secs(dur.as_secs());
-    format!("{}(+{})", eta.to_rfc3339(), format_dur(dur))
+    let eta = Utc::now() + dur;
+    let eta = eta.to_rfc3339_opts(SecondsFormat::Secs, true);
+    format!("{eta}(+{})", format_dur(dur))
 }
 
 /// <https://en.wikipedia.org/wiki/Exponential_smoothing>
