@@ -185,7 +185,7 @@ fn format_dur(dur: Duration) -> FormattedDuration {
 }
 
 fn format_eta(dur: Duration) -> String {
-    let eta = Utc::now() + dur;
+    let eta = Utc::now() + Duration::from_secs(dur.as_secs());
     format!("{}(+{})", eta.to_rfc3339(), format_dur(dur))
 }
 
