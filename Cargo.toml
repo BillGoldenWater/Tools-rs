@@ -9,6 +9,7 @@ members = [
     "gi_rhythm",
     "gi_teleport_detect",
     "img_blender",
+    "pua_codec",
 ]
 resolver = "2"
 
