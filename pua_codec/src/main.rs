@@ -1,4 +1,4 @@
-use std::io::{Read, Write, stdin, stdout};
+use std::io::{BufWriter, Read, Write, stdin, stdout};
 
 use anyhow::{Context, bail, ensure};
 use argh::{FromArgs, from_env};
@@ -30,12 +30,17 @@ struct Args {
     /// input file name, use - for stdin, default is -
     #[argh(positional)]
     input: Option<String>,
+
+    /// size of io buffer
+    #[argh(option)]
+    io_buf_size: Option<usize>,
+
+    /// size of input buffer
+    #[argh(option)]
+    input_buf_size: Option<usize>,
 }
 
 fn main() -> anyhow::Result<()> {
-    const IO_BUF_SIZE: usize = 4096;
-    const INPUT_BUF_SIZE: usize = 4096;
-
     let mut args: Args = from_env();
     let modes_count = [args.text, args.text_utf16, args.binary]
         .into_iter()
@@ -46,6 +51,9 @@ fn main() -> anyhow::Result<()> {
     if modes_count == 0 {
         args.text = true;
     }
+
+    let io_buf_size: usize = args.io_buf_size.unwrap_or(16384);
+    let input_buf_size: usize = args.input_buf_size.unwrap_or(16384);
 
     let input = args.input.unwrap_or_else(|| "-".into());
     let output = args.output.unwrap_or_else(|| "-".into());
@@ -63,14 +71,14 @@ fn main() -> anyhow::Result<()> {
     };
     let mut output: Box<dyn Write> = {
         if output == "-" {
-            Box::new(stdout())
+            Box::new(BufWriter::with_capacity(io_buf_size, stdout()))
         } else {
             let file = std::fs::OpenOptions::new()
                 .create_new(true)
                 .write(true)
                 .open(output)
                 .context("open output")?;
-            Box::new(file)
+            Box::new(BufWriter::with_capacity(io_buf_size, file))
         }
     };
 
@@ -80,7 +88,7 @@ fn main() -> anyhow::Result<()> {
             bool,
         )
             -> anyhow::Result<usize>| {
-            let mut read_buf = vec![0u8; IO_BUF_SIZE];
+            let mut read_buf = vec![0u8; io_buf_size];
             let mut swap = [0u8; 3];
             let mut swap_n = 0;
 
@@ -126,7 +134,7 @@ fn main() -> anyhow::Result<()> {
                         swap_n = 0;
                     }
 
-                    if input_buf.len() >= INPUT_BUF_SIZE {
+                    if input_buf.len() >= input_buf_size {
                         break 'read_input;
                     }
                 }
@@ -186,7 +194,7 @@ fn main() -> anyhow::Result<()> {
             })
             .context("read text input")?;
         } else if args.binary {
-            let mut buf = vec![0u8; IO_BUF_SIZE];
+            let mut buf = vec![0u8; io_buf_size];
             let mut rest_n = 0;
 
             loop {
@@ -219,7 +227,7 @@ fn main() -> anyhow::Result<()> {
             unreachable!()
         }
     } else if args.text {
-        let mut input_buf = Vec::<u8>::with_capacity(IO_BUF_SIZE);
+        let mut input_buf = Vec::<u8>::with_capacity(io_buf_size);
         let mut swap = [0u8; 3];
         let mut swap_n = 0;
 
@@ -228,10 +236,10 @@ fn main() -> anyhow::Result<()> {
                 Data::decode_binary(buf).context("decode_binary")?;
             input_buf.extend(data);
 
-            if input_buf.len() >= IO_BUF_SIZE {
+            if input_buf.len() >= io_buf_size {
                 let mut chunks = input_buf.utf8_chunks();
                 let chunk = chunks.next().expect("expect non zero data");
-                print!("{}", chunk.valid());
+                write_output(chunk.valid().as_bytes())?;
 
                 if !chunk.invalid().is_empty() {
                     if chunks.next().is_some() {
@@ -252,22 +260,22 @@ fn main() -> anyhow::Result<()> {
 
         let data = str::from_utf8(&input_buf)
             .context("data is not valid utf8 (eof)")?;
-        print!("{data}");
+        write_output(data.as_bytes())?;
     } else if args.text_utf16 {
-        let mut input_buf = Vec::<u16>::with_capacity(INPUT_BUF_SIZE);
+        let mut input_buf = Vec::<u16>::with_capacity(input_buf_size);
         read_text_input(&mut |buf, _| {
             let data = Data::decode_u16(buf).context("decode_u16")?;
             input_buf.extend(data);
 
-            if input_buf.len() >= INPUT_BUF_SIZE && input_buf.len() > 1 {
+            if input_buf.len() >= input_buf_size && input_buf.len() > 1 {
                 let result = String::from_utf16(&input_buf);
                 if let Ok(result) = result {
-                    print!("{result}");
+                    write_output(result.as_bytes())?;
                 } else {
                     let n = input_buf.len() - 1;
                     let data = String::from_utf16(&input_buf[..n])
                         .context("data is invalid utf16")?;
-                    print!("{data}");
+                    write_output(data.as_bytes())?;
                     input_buf.swap(n, 0);
                 }
             }
@@ -278,7 +286,7 @@ fn main() -> anyhow::Result<()> {
 
         let data = String::from_utf16(&input_buf)
             .context("data is invalid utf16 (eof)")?;
-        print!("{data}");
+        write_output(data.as_bytes())?;
     } else if args.binary {
         read_text_input(&mut |buf, _| {
             let data =
@@ -291,6 +299,8 @@ fn main() -> anyhow::Result<()> {
     } else {
         unreachable!()
     }
+
+    output.flush().context("flush output")?;
 
     Ok(())
 }
