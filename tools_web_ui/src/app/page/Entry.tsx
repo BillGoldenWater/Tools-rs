@@ -1,5 +1,5 @@
-import { jump_to, PageId } from "../page";
 import { Panel } from "../../component/Panel";
+import { jump_to, type PageId } from "../page";
 
 export function Entry() {
   return (
@@ -10,12 +10,24 @@ export function Entry() {
           name={"引航罗盘推演"}
           iconUrl={"/assets/img/function_icon/navigation_compass_solver.webp"}
         />
+        <EntryItem
+          id={"aeroplane_chess_solver"}
+          name={"飞行棋推演"}
+          iconUrl={"/assets/img/function_icon/aeroplane_chess_solver.webp"}
+          by={`\
+"Fei xing qi board (RYBG).svg" \
+by [Mliu92](https://commons.wikimedia.org/wiki/User:Mliu92)
+Source: https://commons.wikimedia.org/wiki/File:Fei_xing_qi_board_(RYBG).svg
+License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+Rendered to Webp\
+`}
+        />
       </Panel>
     </div>
   );
 }
 
-function EntryItem(props: { id: PageId; name: string; iconUrl: string }) {
+function EntryItem(props: { id: PageId; name: string; iconUrl: string, by?: string }) {
   return (
     <div
       onclick={jump_to(props.id)}
@@ -30,6 +42,7 @@ function EntryItem(props: { id: PageId; name: string; iconUrl: string }) {
         draggable={false}
         elementtiming={""}
         fetchpriority={"high"}
+        title={props.by}
       />
       <div class={"flex justify-center p-2"}>{props.name}</div>
     </div>

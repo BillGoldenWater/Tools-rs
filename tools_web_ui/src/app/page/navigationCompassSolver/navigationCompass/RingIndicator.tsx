@@ -1,5 +1,4 @@
-import { Motion } from "@motionone/solid";
-import { spring } from "motion";
+import { Motion } from "solid-motionone";
 
 export interface RingIndicatorProps {
   offset: number;
@@ -17,11 +16,13 @@ export function RingIndicator(props: RingIndicatorProps) {
       <Motion.div
         animate={{ rotate: rotate() }}
         transition={{
-          easing: spring({
-            damping: 15,
-            mass: 1,
-            stiffness: 150,
-          }),
+          easing: "ease-out",
+          duration: 0.1,
+          // easing: spring({
+          //   damping: 15,
+          //   mass: 1,
+          //   stiffness: 150,
+          // }),
         }}
         class={"group absolute left-24 top-24 h-0 w-0 transform-gpu"}
         classList={{
@@ -34,7 +35,7 @@ export function RingIndicator(props: RingIndicatorProps) {
             "--tw-translate-x": `${xOffset()}rem`,
           }}
           class={
-            "absolute h-2 w-8 -translate-y-1 transform-gpu rounded bg-cyan-400 group-[.ringIndicatorIsInner]:hue-rotate-[200deg] group-[.ringIndicatorNonActive]:saturate-50 dark:bg-cyan-300 dark:group-[.ringIndicatorNonActive]:brightness-75"
+            "absolute h-2 w-8 -translate-y-1 transform-gpu rounded bg-cyan-400 group-[.ringIndicatorIsInner]:hue-rotate-200 group-[.ringIndicatorNonActive]:saturate-50 dark:bg-cyan-300 dark:group-[.ringIndicatorNonActive]:brightness-75"
           }
         />
       </Motion.div>

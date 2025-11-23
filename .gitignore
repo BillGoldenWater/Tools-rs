@@ -6,5 +6,4 @@
 /.test
 /in
 /out
-/tools_wasm/pkg
 /target

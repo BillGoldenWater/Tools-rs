@@ -1,6 +1,6 @@
 import { ParentProps } from "solid-js";
 
-export function Panel(props: ParentProps & { class?: string }) {
+export function Panel(props: ParentProps<{ class?: string }>) {
   const additionalClass = () => (props.class != null ? ` ${props.class}` : "");
 
   return (

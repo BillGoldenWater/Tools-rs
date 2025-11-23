@@ -1,10 +1,12 @@
-import { NavigationCompassSolver } from "./page/NavigationCompassSolver";
-import { Component, lazy } from "solid-js";
+import { type Component, lazy } from "solid-js";
 import { importAsDefault } from "../utils/importAsDefault";
+import { AeroplaneChessSolver } from "./page/AeroplaneChessSolver";
+import { NavigationCompassSolver } from "./page/NavigationCompassSolver";
 
 export const pages = {
   "": lazy(() => importAsDefault<Component>(import("./page/Entry"), "Entry")),
   navigation_compass_solver: NavigationCompassSolver,
+  aeroplane_chess_solver: AeroplaneChessSolver,
 };
 
 export type PageId = keyof typeof pages;

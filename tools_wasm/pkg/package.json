@@ -1,0 +1,14 @@
+{
+    "name": "tools_wasm",
+    "version": "1.0.0",
+    "type": "module",
+    "exports": {
+        ".": "./tools_wasm.js",
+        "./tools_wasm.js": "./tools_wasm.js",
+        "./tools_wasm.d.ts": "./tools_wasm.d.ts",
+        "./tools_wasm_bg.wasm": "./tools_wasm_bg.wasm",
+        "./tools_wasm_bg.wasm.d.ts": "./tools_wasm_bg.wasm.d.ts",
+        "./package.json": "./package.json"
+    },
+    "types": "./tools_wasm.d.ts"
+}

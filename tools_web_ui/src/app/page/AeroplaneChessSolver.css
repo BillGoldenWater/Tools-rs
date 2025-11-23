@@ -1,0 +1,14 @@
+@reference "tailwindcss";
+
+.ACS_StepSelector {
+  @apply h-10 w-10 p-2;
+  @apply flex items-center justify-center;
+  @apply rounded-lg border-2 border-solid;
+  @apply select-none;
+}
+
+.ACS_Preview {
+  @apply flex gap-4 items-center;
+  @apply font-mono whitespace-pre;
+  @apply select-none;
+}

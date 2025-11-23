@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   @apply bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-gray-200;
