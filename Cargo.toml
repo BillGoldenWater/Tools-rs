@@ -11,6 +11,7 @@ members = [
     "img_blender",
     "pua_codec",
     "aeroplane_chess_solver",
+    "audio_mirror",
 ]
 resolver = "2"
 

@@ -1,0 +1,18 @@
+[package]
+name = "audio_mirror"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.101"
+argh = "0.1.14"
+audioadapter-buffers = "2.0.0"
+cpal = "0.17.1"
+dasp_sample = "0.11.0"
+dotenvy = "0.15.7"
+ringbuf = "0.4.8"
+rubato = "1.0.1"
+thiserror = "2.0.18"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+zerocopy = { version = "0.8.39", features = ["derive"] }
