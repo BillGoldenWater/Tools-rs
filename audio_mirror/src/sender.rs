@@ -45,6 +45,10 @@ pub fn run(addr: &str) {
 
         let (device, supported_config, config) =
             get_default_output(&host).unwrap();
+        tracing::info!(
+            "select device: {:?}",
+            device.description().unwrap()
+        );
         tracing::info!("config: {supported_config:?}");
 
         struct P<'p> {
