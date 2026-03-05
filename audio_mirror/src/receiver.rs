@@ -15,9 +15,9 @@ use ringbuf::traits::{Consumer, Producer, Split};
 use rubato::{FixedSync, Resampler};
 use zerocopy::TryFromBytes as _;
 
-use crate::{protocol::Header, utils::get_default_output};
+use crate::{Args, protocol::Header, utils::get_default_output};
 
-pub fn run(addr: &str) {
+pub fn run(args: &Args) {
     let host = cpal::default_host();
 
     let mut delay = 0.0_f64;
@@ -34,8 +34,8 @@ pub fn run(addr: &str) {
             no_dev_logged = false;
         }
 
-        tracing::info!("connecting {addr}");
-        let reason = recv_and_play(&host, addr);
+        tracing::info!("connecting {addr}", addr = args.addr);
+        let reason = recv_and_play(&host, args);
         match reason {
             EndReason::Unknown(error) => {
                 tracing::error!("unknown error: {error}");
@@ -59,11 +59,11 @@ pub fn run(addr: &str) {
     }
 }
 
-fn recv_and_play(host: &Host, addr: &str) -> EndReason {
+fn recv_and_play(host: &Host, args: &Args) -> EndReason {
     let (notify_tx, notify_rx) = mpsc::channel::<Notification>();
 
     let (device, _supported_config, config) =
-        match get_default_output(host) {
+        match get_default_output(host, args) {
             Ok(it) => it,
             Err(err) => return EndReason::Unknown(err),
         };
@@ -114,14 +114,14 @@ fn recv_and_play(host: &Host, addr: &str) -> EndReason {
     stream.play().unwrap();
 
     // NOTE: spawn receiver after play output stream for minimize buffering
-    let res = spawn_receiver(addr, prod, notify_tx, &config);
+    let res = spawn_receiver(&args.addr, prod, notify_tx, &config);
     if let Err(err) = res {
         tracing::error!("unable to spawn receiver: {err}");
 
         return EndReason::Network;
     }
 
-    tracing::info!("connected to {addr}");
+    tracing::info!("connected to {addr}", addr = args.addr);
     while let Ok(notification) = notify_rx.recv() {
         match notification {
             Notification::Tick => {

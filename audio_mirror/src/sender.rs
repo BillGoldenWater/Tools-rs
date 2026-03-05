@@ -18,11 +18,12 @@ use ringbuf::{
 use zerocopy::IntoBytes;
 
 use crate::{
+    Args,
     protocol::{Header, SampleType},
     utils::get_default_output,
 };
 
-pub fn run(addr: &str) {
+pub fn run(args: &Args) {
     // TODO: auto device switch
     // TODO: input device
     let host = if cfg!(target_os = "windows") {
@@ -37,14 +38,14 @@ pub fn run(addr: &str) {
         cpal::default_host()
     };
 
-    let listener = TcpListener::bind(addr).unwrap();
+    let listener = TcpListener::bind(&args.addr).unwrap();
     tracing::info!("listening {}", listener.local_addr().unwrap());
 
     while let Ok((net_stream, addr)) = listener.accept() {
         tracing::info!("accpet: {addr}");
 
         let (device, supported_config, config) =
-            get_default_output(&host).unwrap();
+            get_default_output(&host, args).unwrap();
         tracing::info!(
             "select device: {:?}",
             device.description().unwrap()

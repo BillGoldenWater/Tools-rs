@@ -15,11 +15,15 @@ struct Args {
     /// send or receive, default to send
     #[argh(positional, from_str_fn(Role::from_str))]
     role: Role,
+    /// address to listen or connect
     #[argh(positional)]
     addr: String,
+    /// buffer size, default to 128, will be clamp to supported range
+    #[argh(option, default = "128")]
+    buffer_size: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Role {
     Send,
     Recv,
@@ -52,7 +56,7 @@ fn main() {
 
     let args: Args = argh::from_env();
     match args.role {
-        Role::Send => sender::run(&args.addr),
-        Role::Recv => receiver::run(&args.addr),
+        Role::Send => sender::run(&args),
+        Role::Recv => receiver::run(&args),
     }
 }
