@@ -43,6 +43,7 @@ pub fn run(args: &Args) {
 
     while let Ok((net_stream, addr)) = listener.accept() {
         tracing::info!("accpet: {addr}");
+        net_stream.set_nodelay(true).unwrap();
 
         let (device, supported_config, config) =
             get_default_output(&host, args).unwrap();
