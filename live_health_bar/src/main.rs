@@ -387,7 +387,9 @@ impl HealthState {
                         applied: false,
                     }
                 } else if !pressed {
-                    self.apply_hit(config);
+                    if !*applied {
+                        self.apply_hit(config);
+                    }
                     self.held_state = HeldState::None;
                     return false;
                 }
